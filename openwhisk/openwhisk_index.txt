@@ -1,0 +1,110 @@
+It's minikube for me!
+
+Official Apache Openwhisk Doc :: https://github.com/apache/incubator-openwhisk-deploy-kube
+
+install helm :: package manager for kubernetes (similar to apt-get or yum)
+https://github.com/helm/helm
+
+	root@pwned:~# kubectl get pods -n kube-system
+	NAME                                        READY     STATUS    RESTARTS   AGE
+	default-http-backend-59868b7dd6-7mv7z       1/1       Running   4          20d
+	etcd-minikube                               1/1       Running   0          36m
+	kube-addon-manager-minikube                 1/1       Running   8          26d
+	kube-apiserver-minikube                     1/1       Running   0          36m
+	kube-controller-manager-minikube            1/1       Running   0          36m
+	kube-dns-86f4d74b45-f5pxm                   3/3       Running   44         26d
+	kube-proxy-lrxsm                            1/1       Running   0          34m
+	kube-scheduler-minikube                     1/1       Running   0          36m
+	kubernetes-dashboard-5498ccf677-vzntf       1/1       Running   26         26d
+	nginx-ingress-controller-5984b97644-hhncb   1/1       Running   16         20d
+	storage-provisioner                         1/1       Running   26         26d
+	tiller-deploy-67d8b477f7-s6mg2              1/1       Running   0          43s
+	root@pwned:~# 
+
+yup looks good.. helm is ready!
+
+so we will now use helm to install openwhisk on our kube cluster
+
+helm install ./helm/openwhisk --namespace=openwhisk --name=owdev -f mycluster.yaml
+
+	root@pwned:~/kubernetes/serverless/openwhisk/incubator-openwhisk-deploy-kube# kubectl get pods -n openwhisk
+	NAME                          READY     STATUS              RESTARTS   AGE
+	apigateway-7b87dd957f-d2h8t   0/1       ContainerCreating   0          1m
+	controller-0                  0/1       Init:0/2            0          1m
+	couchdb-6b87ccfb78-jjcvh      0/1       ContainerCreating   0          1m
+	init-couchdb-5kg4b            0/1       ContainerCreating   0          1m
+	install-catalog-kgp99         0/1       Init:0/1            0          1m
+	install-routemgmt-hw6d8       0/1       Init:0/1            0          1m
+	invoker-2clw7                 0/1       Init:0/2            0          1m
+	kafka-0                       0/1       Init:0/1            0          1m
+	nginx-598c75d7d6-tx2ts        0/1       ContainerCreating   0          1m
+	redis-5d77674f65-dqw7j        0/1       ContainerCreating   0          1m
+	zookeeper-0                   0/1       ContainerCreating   0          1m
+	root@pwned:~/kubernetes/serverless/openwhisk/incubator-openwhisk-deploy-kube# 
+
+it's downloading the images for the first time
+
+Configuring wsk client to point to the apigateway exposed  :::
+
+		Apache OpenWhisk
+	Copyright 2016-2018 The Apache Software Foundation
+
+	This product includes software developed at
+	The Apache Software Foundation (http://www.apache.org/).
+
+	To configure your wsk cli to connect to it, set the apihost property
+	using the command below:
+	  $ wsk property set --apihost 192.168.99.100:31001
+
+	Your release is named owdev.
+
+	To learn more about the release, try:
+
+	  $ helm status owdev
+	  $ helm get owdev
+
+	
+
+	root@pwned:~/kubernetes/serverless/openwhisk/incubator-openwhisk-deploy-kube# kubectl config set-context `kubectl config current-context` --namespace=openwhisk
+	Context "minikube" modified.
+	root@pwned:~/kubernetes/serverless/openwhisk/incubator-openwhisk-deploy-kube# kubectl get pods 
+	NAME                          READY     STATUS              RESTARTS   AGE
+	apigateway-7b87dd957f-d2h8t   1/1       Running             0          9m
+	controller-0                  0/1       Init:0/2            0          9m
+	couchdb-6b87ccfb78-jjcvh      1/1       Running             0          9m
+	init-couchdb-5kg4b            1/1       Running             0          8m
+	install-catalog-kgp99         0/1       Init:0/1            0          8m
+	install-routemgmt-hw6d8       0/1       Init:0/1            0          8m
+	invoker-2clw7                 0/1       Init:0/2            0          9m
+	kafka-0                       0/1       Init:0/1            0          8m
+	nginx-598c75d7d6-tx2ts        1/1       Running             0          9m
+	redis-5d77674f65-dqw7j        1/1       Running             0          9m
+	zookeeper-0                   0/1       ContainerCreating   0          8m
+	root@pwned:~/kubernetes/serverless/openwhisk/incubator-openwhisk-deploy-kube# 
+
+setting the context to prevent typing -n openwhisk everytime!
+
+	This product includes software developed at
+	The Apache Software Foundation (http://www.apache.org/).
+
+	To configure your wsk cli to connect to it, set the apihost property
+	using the command below:
+	  $ wsk property set --apihost 192.168.99.100:31001
+
+	Your release is named owdev.
+
+	To learn more about the release, try:
+
+	  $ helm status owdev
+	  $ helm get owdev
+
+
+ok sounds good.. but it took quite some time to install (cuz of the image downloads)
+so, if some of the pods are failing, you can try resetting the installation this time it'll pick from kube cluster.
+
+Init of some pods take more time, i am not sure of the reason (maybe cuz it has some dependency)
+
+ok you can reduce the starting time by referring to a "runtime-minimal-travis.json" instead of runtimes.json!
+
+
+
